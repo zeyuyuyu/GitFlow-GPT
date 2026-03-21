@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swarm Intelligence Orchestrator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --success: #2ecc71;
+            --bg: #ecf0f1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: var(--bg);
+            color: var(--primary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .swarm-visualizer {
+            height: 400px;
+            background: #1a1a1a;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .agent {
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+            position: absolute;
+            transition: all 0.5s ease;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .metric-card {
+            padding: 1rem;
+            border-radius: 8px;
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 500;
+            color: var(--accent);
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        button {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            background: var(--accent);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        .achievement {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 1rem;
+            background: var(--success);
+            color: white;
+            border-radius: 5px;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Swarm Intelligence Orchestrator</h1>
+        <div class="dashboard">
+            <div class="card">
+                <h2>Swarm Visualization</h2>
+                <div class="swarm-visualizer" id="visualizer"></div>
+            </div>
+            <div class="card">
+                <h2>Metrics</h2>
+                <div class="metrics">
+                    <div class="metric-card">
+                        <h3>Active Agents</h3>
+                        <div class="metric-value" id="agent-count">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <h3>Convergence</h3>
+                        <div class="metric-value" id="convergence">0%</div>
+                    </div>
+                </div>
+                <div class="controls">
+                    <button onclick="startSimulation()">Start Simulation</button>
+                    <button onclick="resetSimulation()">Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let agents = [];
+        let simulationRunning = false;
+
+        function createAgent() {
+            const agent = document.createElement('div');
+            agent.className = 'agent';
+            agent.style.left = Math.random() * 100 + '%';
+            agent.style.top = Math.random() * 100 + '%';
+            return agent;
+        }
+
+        function updateMetrics() {
+            document.getElementById('agent-count').textContent = agents.length;
+            const convergence = Math.floor(Math.random() * 100);
+            document.getElementById('convergence').textContent = convergence + '%';
+
+            if (convergence > 90) {
+                showAchievement('High Convergence Achievement Unlocked! 🌟');
+            }
+        }
+
+        function showAchievement(message) {
+            const achievement = document.createElement('div');
+            achievement.className = 'achievement';
+            achievement.textContent = message;
+            document.body.appendChild(achievement);
+            setTimeout(() => achievement.remove(), 3000);
+        }
+
+        function startSimulation() {
+            if (simulationRunning) return;
+            simulationRunning = true;
+            const visualizer = document.getElementById('visualizer');
+            
+            for (let i = 0; i < 20; i++) {
+                const agent = createAgent();
+                visualizer.appendChild(agent);
+                agents.push(agent);
+            }
+
+            setInterval(() => {
+                agents.forEach(agent => {
+                    agent.style.left = Math.random() * 100 + '%';
+                    agent.style.top = Math.random() * 100 + '%';
+                });
+                updateMetrics();
+            }, 1000);
+        }
+
+        function resetSimulation() {
+            const visualizer = document.getElementById('visualizer');
+            agents.forEach(agent => agent.remove());
+            agents = [];
+            simulationRunning = false;
+            updateMetrics();
+        }
+    </script>
+</body>
+</html>
