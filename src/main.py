@@ -1,43 +1,91 @@
 import os
-import git
-import yaml
-from typing import Dict, List
-from transformers import AutoModelForCausalLM, AutoTokenizer
+import subprocess
+from typing import List, Dict
+import openai
+from git import Repo
 
 class GitFlowGPT:
-    def __init__(self, config_path: str = '.gitflow-gpt.yaml'):
-        self.config = self._load_config(config_path)
-        self.repo = git.Repo(os.getcwd())
-        self.model = self._initialize_ai_model()
+    def __init__(self, repo_path: str, openai_key: str):
+        self.repo = Repo(repo_path)
+        self.git = self.repo.git
+        openai.api_key = openai_key
 
-    def _load_config(self, config_path: str) -> Dict:
-        with open(config_path, 'r') as f:
-            return yaml.safe_load(f)
+    def analyze_changes(self) -> Dict[str, str]:
+        """Analyze uncommitted changes using GPT to suggest branch naming and PR description"""
+        diff = self.git.diff()
+        
+        prompt = f"Analyze these git changes and suggest:
+1. A semantic branch name (feat/fix/refactor)
+2. A detailed PR description
 
-    def _initialize_ai_model(self) -> AutoModelForCausalLM:
-        model_name = self.config['ai_model']
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model = AutoModelForCausalLM.from_pretrained(model_name)
-        return model
+Changes:
+{diff}"
 
-    def analyze_changes(self) -> List[Dict]:
-        # Analyze current branch changes
-        diff = self.repo.git.diff('HEAD')
-        return self._process_diff_with_ai(diff)
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}]
+        )
 
-    def suggest_optimizations(self) -> List[str]:
-        # Generate optimization suggestions
-        changes = self.analyze_changes()
-        return self._generate_optimization_suggestions(changes)
+        # Parse GPT response
+        content = response.choices[0].message.content
+        lines = content.split('\n')
+        branch_name = lines[0].strip()
+        pr_description = '\n'.join(lines[1:]).strip()
 
-    def review_code(self) -> Dict:
-        # Perform AI-powered code review
-        pass
+        return {
+            "branch_name": branch_name,
+            "pr_description": pr_description
+        }
+
+    def create_feature_branch(self, branch_name: str) -> None:
+        """Create and checkout a new feature branch"""
+        current = self.repo.active_branch.name
+        if current != 'main' and current != 'master':
+            raise ValueError(f"Must be on main/master branch, currently on {current}")
+
+        self.git.checkout('HEAD', b=branch_name)
+
+    def create_pull_request(self, title: str, body: str) -> None:
+        """Create a pull request using GitHub CLI"""
+        try:
+            subprocess.run([
+                'gh', 'pr', 'create',
+                '--title', title,
+                '--body', body
+            ], check=True)
+        except subprocess.CalledProcessError:
+            print("Error: Ensure GitHub CLI is installed and authenticated")
+
+    def smart_commit(self) -> None:
+        """Analyze changes and create a semantically named branch with PR"""
+        # Analyze current changes
+        analysis = self.analyze_changes()
+        branch_name = analysis['branch_name']
+        pr_description = analysis['pr_description']
+
+        # Create feature branch
+        self.create_feature_branch(branch_name)
+
+        # Stage and commit changes
+        self.git.add('.')
+        self.git.commit('-m', f"{branch_name}: Automated commit")
+
+        # Push branch and create PR
+        self.git.push('--set-upstream', 'origin', branch_name)
+        self.create_pull_request(
+            title=branch_name,
+            body=pr_description
+        )
 
 def main():
-    gpt_flow = GitFlowGPT()
-    suggestions = gpt_flow.suggest_optimizations()
-    print('Optimization suggestions:', suggestions)
+    repo_path = os.getenv('REPO_PATH', '.')
+    openai_key = os.getenv('OPENAI_API_KEY')
+    
+    if not openai_key:
+        raise ValueError("OPENAI_API_KEY environment variable is required")
+
+    gitflow = GitFlowGPT(repo_path, openai_key)
+    gitflow.smart_commit()
 
 if __name__ == '__main__':
     main()
