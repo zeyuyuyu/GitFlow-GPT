@@ -3,26 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Swarm Intelligence Orchestrator</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <title>AICanary - AI Monitoring Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #2c3e50;
-            --accent: #3498db;
-            --success: #2ecc71;
-            --bg: #ecf0f1;
-        }
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
         }
 
         body {
-            font-family: 'Roboto', sans-serif;
-            background: var(--bg);
-            color: var(--primary);
+            background: #0f172a;
+            color: #e2e8f0;
         }
 
         .container {
@@ -31,17 +24,39 @@
             padding: 2rem;
         }
 
-        .dashboard {
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 600;
+            background: linear-gradient(45deg, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+
+        .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
         }
 
         .card {
-            background: white;
-            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
             padding: 1.5rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             transition: transform 0.3s ease;
         }
 
@@ -49,163 +64,159 @@
             transform: translateY(-5px);
         }
 
-        .swarm-visualizer {
-            height: 400px;
-            background: #1a1a1a;
-            border-radius: 10px;
-            position: relative;
-            overflow: hidden;
+        .card-header {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #60a5fa;
         }
 
-        .agent {
+        .metric {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .chart-container {
+            height: 200px;
+            margin-top: 1rem;
+        }
+
+        .status-indicator {
+            display: inline-block;
             width: 10px;
             height: 10px;
-            background: var(--accent);
             border-radius: 50%;
-            position: absolute;
-            transition: all 0.5s ease;
+            margin-right: 0.5rem;
         }
 
-        .metrics {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
+        .status-healthy {
+            background: #34d399;
+            box-shadow: 0 0 10px #34d399;
         }
 
-        .metric-card {
-            padding: 1rem;
-            border-radius: 8px;
-            background: rgba(52, 152, 219, 0.1);
+        .status-warning {
+            background: #fbbf24;
+            box-shadow: 0 0 10px #fbbf24;
         }
 
-        .metric-value {
-            font-size: 2rem;
-            font-weight: 500;
-            color: var(--accent);
-        }
-
-        .controls {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-
-        button {
-            padding: 0.8rem 1.5rem;
-            border: none;
-            border-radius: 5px;
-            background: var(--accent);
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        button:hover {
-            background: #2980b9;
-        }
-
-        .achievement {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 1rem;
-            background: var(--success);
-            color: white;
-            border-radius: 5px;
-            animation: slideIn 0.5s ease;
-        }
-
-        @keyframes slideIn {
-            from { transform: translateX(100%); }
-            to { transform: translateX(0); }
+        .status-error {
+            background: #ef4444;
+            box-shadow: 0 0 10px #ef4444;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>Swarm Intelligence Orchestrator</h1>
-        <div class="dashboard">
+        <header class="header">
+            <h1 class="logo">AICanary</h1>
+        </header>
+
+        <div class="dashboard-grid">
             <div class="card">
-                <h2>Swarm Visualization</h2>
-                <div class="swarm-visualizer" id="visualizer"></div>
-            </div>
-            <div class="card">
-                <h2>Metrics</h2>
-                <div class="metrics">
-                    <div class="metric-card">
-                        <h3>Active Agents</h3>
-                        <div class="metric-value" id="agent-count">0</div>
-                    </div>
-                    <div class="metric-card">
-                        <h3>Convergence</h3>
-                        <div class="metric-value" id="convergence">0%</div>
-                    </div>
+                <div class="card-header">
+                    <span class="status-indicator status-healthy"></span>
+                    System Health
                 </div>
-                <div class="controls">
-                    <button onclick="startSimulation()">Start Simulation</button>
-                    <button onclick="resetSimulation()">Reset</button>
+                <div class="metric">98.5%</div>
+                <div class="chart-container">
+                    <canvas id="healthChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="status-indicator status-warning"></span>
+                    Response Time
+                </div>
+                <div class="metric">245ms</div>
+                <div class="chart-container">
+                    <canvas id="responseChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="status-indicator status-healthy"></span>
+                    Model Accuracy
+                </div>
+                <div class="metric">94.2%</div>
+                <div class="chart-container">
+                    <canvas id="accuracyChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        let agents = [];
-        let simulationRunning = false;
-
-        function createAgent() {
-            const agent = document.createElement('div');
-            agent.className = 'agent';
-            agent.style.left = Math.random() * 100 + '%';
-            agent.style.top = Math.random() * 100 + '%';
-            return agent;
+        function createChart(ctx, label, data, color) {
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 12}, (_, i) => `${i}h`),
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        borderColor: color,
+                        tension: 0.4,
+                        fill: true,
+                        backgroundColor: color + '20'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#e2e8f0'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#e2e8f0'
+                            }
+                        }
+                    }
+                }
+            });
         }
 
-        function updateMetrics() {
-            document.getElementById('agent-count').textContent = agents.length;
-            const convergence = Math.floor(Math.random() * 100);
-            document.getElementById('convergence').textContent = convergence + '%';
+        // Initialize charts with sample data
+        window.onload = () => {
+            createChart(
+                document.getElementById('healthChart'),
+                'Health',
+                [97, 98, 96, 98.5, 97.5, 98, 99, 98.5, 97, 98, 98.5, 98.5],
+                '#34d399'
+            );
 
-            if (convergence > 90) {
-                showAchievement('High Convergence Achievement Unlocked! 🌟');
-            }
-        }
+            createChart(
+                document.getElementById('responseChart'),
+                'Response Time',
+                [220, 235, 260, 245, 230, 255, 240, 245, 250, 235, 245, 245],
+                '#fbbf24'
+            );
 
-        function showAchievement(message) {
-            const achievement = document.createElement('div');
-            achievement.className = 'achievement';
-            achievement.textContent = message;
-            document.body.appendChild(achievement);
-            setTimeout(() => achievement.remove(), 3000);
-        }
-
-        function startSimulation() {
-            if (simulationRunning) return;
-            simulationRunning = true;
-            const visualizer = document.getElementById('visualizer');
-            
-            for (let i = 0; i < 20; i++) {
-                const agent = createAgent();
-                visualizer.appendChild(agent);
-                agents.push(agent);
-            }
-
-            setInterval(() => {
-                agents.forEach(agent => {
-                    agent.style.left = Math.random() * 100 + '%';
-                    agent.style.top = Math.random() * 100 + '%';
-                });
-                updateMetrics();
-            }, 1000);
-        }
-
-        function resetSimulation() {
-            const visualizer = document.getElementById('visualizer');
-            agents.forEach(agent => agent.remove());
-            agents = [];
-            simulationRunning = false;
-            updateMetrics();
-        }
+            createChart(
+                document.getElementById('accuracyChart'),
+                'Accuracy',
+                [93, 94, 93.5, 94.2, 94, 93.8, 94.5, 94.2, 93.9, 94.1, 94.2, 94.2],
+                '#60a5fa'
+            );
+        };
     </script>
 </body>
 </html>
