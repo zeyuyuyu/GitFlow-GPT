@@ -1,83 +1,70 @@
 import os
-import subprocess
-from typing import List, Dict
+from typing import Dict, List
 import openai
 from git import Repo
 
 class GitFlowGPT:
     def __init__(self, repo_path: str, openai_key: str):
         self.repo = Repo(repo_path)
-        self.git = self.repo.git
         openai.api_key = openai_key
 
-    def analyze_changes(self) -> Dict[str, str]:
-        """Analyze uncommitted changes using GPT to suggest branch naming and PR description"""
-        diff = self.git.diff()
-        
-        prompt = f"Analyze these git changes and suggest:
-1. A semantic branch name (feat/fix/refactor)
-2. A detailed PR description
+    def get_diff_changes(self) -> str:
+        """Get git diff of staged changes"""
+        return self.repo.git.diff('--cached')
 
-Changes:
-{diff}"
+    def generate_pr_description(self, diff: str) -> Dict[str, str]:
+        """Generate PR description using GPT"""
+        prompt = f"""Based on the following git diff, generate a clear and detailed pull request description.
+Include:
+1. A concise title
+2. Summary of changes
+3. Technical implementation details
+4. Testing considerations
+
+Git diff:
+{diff}
+"""
 
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}]
+            model="gpt-4",
+            messages=[{
+                "role": "system",
+                "content": "You are a helpful AI that generates clear and professional pull request descriptions."
+            }, {
+                "role": "user",
+                "content": prompt
+            }]
         )
 
-        # Parse GPT response
-        content = response.choices[0].message.content
-        lines = content.split('\n')
-        branch_name = lines[0].strip()
-        pr_description = '\n'.join(lines[1:]).strip()
-
+        description = response.choices[0].message.content
+        
+        # Parse response into sections
+        sections = description.split('\n\n')
         return {
-            "branch_name": branch_name,
-            "pr_description": pr_description
+            'title': sections[0].strip(),
+            'description': '\n\n'.join(sections[1:]).strip()
         }
 
-    def create_feature_branch(self, branch_name: str) -> None:
-        """Create and checkout a new feature branch"""
+    def create_pr_with_description(self, base_branch: str = 'main') -> None:
+        """Create a PR with AI-generated description"""
+        # Get current branch
         current = self.repo.active_branch.name
-        if current != 'main' and current != 'master':
-            raise ValueError(f"Must be on main/master branch, currently on {current}")
+        
+        # Get diff of staged changes
+        diff = self.get_diff_changes()
+        if not diff:
+            raise ValueError("No staged changes found")
 
-        self.git.checkout('HEAD', b=branch_name)
+        # Generate PR description
+        pr_content = self.generate_pr_description(diff)
 
-    def create_pull_request(self, title: str, body: str) -> None:
-        """Create a pull request using GitHub CLI"""
-        try:
-            subprocess.run([
-                'gh', 'pr', 'create',
-                '--title', title,
-                '--body', body
-            ], check=True)
-        except subprocess.CalledProcessError:
-            print("Error: Ensure GitHub CLI is installed and authenticated")
-
-    def smart_commit(self) -> None:
-        """Analyze changes and create a semantically named branch with PR"""
-        # Analyze current changes
-        analysis = self.analyze_changes()
-        branch_name = analysis['branch_name']
-        pr_description = analysis['pr_description']
-
-        # Create feature branch
-        self.create_feature_branch(branch_name)
-
-        # Stage and commit changes
-        self.git.add('.')
-        self.git.commit('-m', f"{branch_name}: Automated commit")
-
-        # Push branch and create PR
-        self.git.push('--set-upstream', 'origin', branch_name)
-        self.create_pull_request(
-            title=branch_name,
-            body=pr_description
-        )
+        # Print results (in real implementation, would use GitHub API to create PR)
+        print(f"\nGenerated Pull Request Content:")
+        print(f"\nTitle: {pr_content['title']}")
+        print(f"\nDescription:\n{pr_content['description']}")
 
 def main():
+    # Initialize with environment variables
     repo_path = os.getenv('REPO_PATH', '.')
     openai_key = os.getenv('OPENAI_API_KEY')
     
@@ -85,7 +72,7 @@ def main():
         raise ValueError("OPENAI_API_KEY environment variable is required")
 
     gitflow = GitFlowGPT(repo_path, openai_key)
-    gitflow.smart_commit()
+    gitflow.create_pr_with_description()
 
 if __name__ == '__main__':
     main()
