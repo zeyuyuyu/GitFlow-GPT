@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AICanary - AI Monitoring Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <title>DeGovSwarm Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -14,8 +14,9 @@
         }
 
         body {
-            background: #0f172a;
-            color: #e2e8f0;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
+            min-height: 100vh;
         }
 
         .container {
@@ -25,24 +26,26 @@
         }
 
         .header {
-            display: flex;
-            align-items: center;
+            text-align: center;
             margin-bottom: 3rem;
         }
 
-        .logo {
-            font-size: 2rem;
-            font-weight: 600;
-            background: linear-gradient(45deg, #60a5fa, #34d399);
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, #00f2fe, #4facfe);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: pulse 2s infinite;
+            animation: glow 2s ease-in-out infinite alternate;
         }
 
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.8; }
-            100% { opacity: 1; }
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 10px #00f2fe;
+            }
+            to {
+                text-shadow: 0 0 20px #4facfe;
+            }
         }
 
         .dashboard-grid {
@@ -52,11 +55,10 @@
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 1rem;
-            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 1.5rem;
             transition: transform 0.3s ease;
         }
 
@@ -64,158 +66,197 @@
             transform: translateY(-5px);
         }
 
-        .card-header {
-            font-size: 1.25rem;
+        .card h2 {
+            font-size: 1.5rem;
             margin-bottom: 1rem;
-            color: #60a5fa;
+            color: #4facfe;
         }
 
-        .metric {
-            font-size: 2.5rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .chart-container {
-            height: 200px;
+        .stats {
+            display: flex;
+            justify-content: space-between;
             margin-top: 1rem;
         }
 
-        .status-indicator {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            margin-right: 0.5rem;
+        .stat-item {
+            text-align: center;
         }
 
-        .status-healthy {
-            background: #34d399;
-            box-shadow: 0 0 10px #34d399;
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #00f2fe;
         }
 
-        .status-warning {
-            background: #fbbf24;
-            box-shadow: 0 0 10px #fbbf24;
+        .stat-label {
+            font-size: 0.9rem;
+            color: #aaa;
         }
 
-        .status-error {
-            background: #ef4444;
-            box-shadow: 0 0 10px #ef4444;
+        .action-button {
+            background: linear-gradient(90deg, #00f2fe, #4facfe);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .action-button:hover {
+            transform: scale(1.05);
+        }
+
+        #particles-js {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    <div id="particles-js"></div>
     <div class="container">
         <header class="header">
-            <h1 class="logo">AICanary</h1>
+            <h1>DeGovSwarm Dashboard</h1>
+            <p>Decentralized Governance Made Beautiful</p>
         </header>
 
         <div class="dashboard-grid">
             <div class="card">
-                <div class="card-header">
-                    <span class="status-indicator status-healthy"></span>
-                    System Health
+                <h2>Governance Overview</h2>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="proposal-count">23</div>
+                        <div class="stat-label">Active Proposals</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="voter-count">1.2k</div>
+                        <div class="stat-label">Active Voters</div>
+                    </div>
                 </div>
-                <div class="metric">98.5%</div>
-                <div class="chart-container">
-                    <canvas id="healthChart"></canvas>
-                </div>
+                <button class="action-button" onclick="viewProposals()">View Proposals</button>
             </div>
 
             <div class="card">
-                <div class="card-header">
-                    <span class="status-indicator status-warning"></span>
-                    Response Time
+                <h2>Community Engagement</h2>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="participant-count">5.6k</div>
+                        <div class="stat-label">Participants</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="contribution-count">892</div>
+                        <div class="stat-label">Contributions</div>
+                    </div>
                 </div>
-                <div class="metric">245ms</div>
-                <div class="chart-container">
-                    <canvas id="responseChart"></canvas>
-                </div>
+                <button class="action-button" onclick="joinCommunity()">Join Community</button>
             </div>
 
             <div class="card">
-                <div class="card-header">
-                    <span class="status-indicator status-healthy"></span>
-                    Model Accuracy
+                <h2>Swarm Analytics</h2>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="swarm-size">142</div>
+                        <div class="stat-label">Active Swarms</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="task-count">367</div>
+                        <div class="stat-label">Open Tasks</div>
+                    </div>
                 </div>
-                <div class="metric">94.2%</div>
-                <div class="chart-container">
-                    <canvas id="accuracyChart"></canvas>
-                </div>
+                <button class="action-button" onclick="exploreSwarms()">Explore Swarms</button>
             </div>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script>
-        function createChart(ctx, label, data, color) {
-            return new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: Array.from({length: 12}, (_, i) => `${i}h`),
-                    datasets: [{
-                        label: label,
-                        data: data,
-                        borderColor: color,
-                        tension: 0.4,
-                        fill: true,
-                        backgroundColor: color + '20'
-                    }]
+        particlesJS("particles-js", {
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: "#ffffff" },
+                shape: { type: "circle" },
+                opacity: { value: 0.5, random: false },
+                size: { value: 3, random: true },
+                line_linked: {
+                    enable: true,
+                    distance: 150,
+                    color: "#ffffff",
+                    opacity: 0.4,
+                    width: 1
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#e2e8f0'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#e2e8f0'
-                            }
-                        }
-                    }
+                move: {
+                    enable: true,
+                    speed: 6,
+                    direction: "none",
+                    random: false,
+                    straight: false,
+                    out_mode: "out",
+                    bounce: false
                 }
-            });
+            },
+            interactivity: {
+                detect_on: "canvas",
+                events: {
+                    onhover: { enable: true, mode: "repulse" },
+                    onclick: { enable: true, mode: "push" },
+                    resize: true
+                }
+            },
+            retina_detect: true
+        });
+
+        function viewProposals() {
+            alert("Redirecting to proposals page...");
         }
 
-        // Initialize charts with sample data
-        window.onload = () => {
-            createChart(
-                document.getElementById('healthChart'),
-                'Health',
-                [97, 98, 96, 98.5, 97.5, 98, 99, 98.5, 97, 98, 98.5, 98.5],
-                '#34d399'
-            );
+        function joinCommunity() {
+            alert("Opening community portal...");
+        }
 
-            createChart(
-                document.getElementById('responseChart'),
-                'Response Time',
-                [220, 235, 260, 245, 230, 255, 240, 245, 250, 235, 245, 245],
-                '#fbbf24'
-            );
+        function exploreSwarms() {
+            alert("Loading swarm explorer...");
+        }
 
-            createChart(
-                document.getElementById('accuracyChart'),
-                'Accuracy',
-                [93, 94, 93.5, 94.2, 94, 93.8, 94.5, 94.2, 93.9, 94.1, 94.2, 94.2],
-                '#60a5fa'
-            );
+        // Add some simple animation to numbers
+        function animateValue(id, start, end, duration) {
+            const obj = document.getElementById(id);
+            const range = end - start;
+            const minTimer = 50;
+            const stepTime = Math.abs(Math.floor(duration / range));
+            const startTime = new Date().getTime();
+            const endTime = startTime + duration;
+            let timer;
+
+            function run() {
+                const now = new Date().getTime();
+                const remaining = Math.max((endTime - now) / duration, 0);
+                const value = Math.round(end - (remaining * range));
+                obj.innerHTML = value;
+                if (value === end) {
+                    clearInterval(timer);
+                }
+            }
+
+            timer = setInterval(run, stepTime);
+            run();
+        }
+
+        // Animate stats on page load
+        window.onload = function() {
+            animateValue("proposal-count", 0, 23, 1000);
+            animateValue("voter-count", 0, 1200, 1500);
+            animateValue("participant-count", 0, 5600, 2000);
+            animateValue("contribution-count", 0, 892, 1500);
+            animateValue("swarm-size", 0, 142, 1000);
+            animateValue("task-count", 0, 367, 1500);
         };
     </script>
 </body>
